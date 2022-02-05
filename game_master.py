@@ -13,8 +13,12 @@ class GameMaster:
         pass
 
     def start_game(self):
+        # Initialize board with the given input.
         (board_l, board_h, num_mines) = self.get_game_type()
         self.board = board.MinesweeperBoard(board_l, board_h, num_mines)
+
+        # While game is still running, get next move from user, then try to play
+        # that move.
         while self.board.game_result() == board.GameResult.STILL_RUNNING:
             self.board.display_board()
             (x_cord, y_cord, num_flags) = self.get_next_move()
@@ -28,6 +32,7 @@ class GameMaster:
 
             self.board.play_move(x_cord, y_cord, num_flags)
 
+        # If the last move resulted in WON / DEFEAT, end the game.
         if self.board.game_result() == board.GameResult.WON:
             print("You won!")
             self.board.display_board()
