@@ -15,7 +15,13 @@ class GameMaster:
     def start_game(self):
         (board_l, board_h, num_mines) = self.get_game_type()
         self.board = board.MinesweeperBoard(board_l, board_h, num_mines)
-        print(self.board.game_result())
+        while self.board.game_result == board.GameResult.STILL_RUNNING:
+            self.board.display_board()
+            (x_cord, y_cord, num_flags) = self.get_next_move()
+            if self.board.is_valid_move(x_cord, y_cord, num_flags):
+                pass
+            else:
+                pass
 
     # Gets input from user and returns tuple of (length, height, num_mines).
     def get_game_type(self):
@@ -23,13 +29,36 @@ class GameMaster:
         print("Enter Grid Type - ('Beginner', 'Medium', 'Expert')")
         game_type = input("'Beginner', 'Medium', 'Expert': ")
         if game_type == 'Beginner':
-            return (9, 9, 10)
+            self.max_x_cord = 10
+            self.max_y_cord = 10
+            self.num_mines = 10
         elif game_type == 'Medium':
-            return (16, 16, 40)
+            self.max_x_cord = 16
+            self.max_y_cord = 16
+            self.num_mines = 40
         elif game_type == 'Expert':
-            return (16, 30, 99)
+            self.max_x_cord = 16
+            self.max_y_cord = 30
+            self.max_mines = 99
         else:
             raise ValueError("Unexpected game_type: %s" % game_type)
+        return (self.max_x_cord, self.max_y_cord, self.num_mines)
+
+    # Gets input from user for the next move. Should give x_cord, y_cord, and
+    # num_flags (0 to indicate no mine).
+    def get_next_move(self):
+        print("Enter x coordinate - (1 .. %s)" % self.max_x_cord)
+        x_cord = input("1 .. %s" % self.max_x_cord)
+
+        print("Enter y coordinate - (1 .. %x)" % self.max_y_cord)
+        y_cord = input("1 .. %s" % self.max_y_cord)
+
+        print ("Enter Number of Flags. Enter 0 for no mines")
+        num_flags = input("0 ..")
+
+        return (x_cord, y_cord, num_flags)
+
+
 
 game_master = GameMaster()
 game_master.start_game()
