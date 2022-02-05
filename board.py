@@ -19,5 +19,14 @@ class MinesweeperBoard:
         self.board_height = board_height
         self.num_mines = num_mines
 
+    def display_board(self):
+        print("-------------------")
+
     def game_result(self):
         return GameResult.STILL_RUNNING
+
+    def is_valid_move(self, x_cord, y_cord, num_flags):
+        return (False, "Error")
+
+    def play_move(self, x_cord, y_cord, num_flags):
+        pass
