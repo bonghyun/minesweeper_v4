@@ -23,7 +23,7 @@ class GameMaster:
         # While game is still running, get next move from user, then try to play
         # that move.
         while self.board.game_result() == board.GameResult.STILL_RUNNING:
-            self.board.print_board()
+            self.board.print_board(debug=True)
             (x_cord, y_cord, action) = self.get_next_move()
             (is_valid_move, err_msg) = self.board.is_valid_move(
                 x_cord, y_cord, action)
