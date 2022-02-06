@@ -15,6 +15,7 @@ class GameResultEnum(Enum):
 class UserAction(Enum):
     CLICK = 1
     PLANT_FLAG = 2
+    UNPLANT_FLAG = 3
 
 # Enums representing square shown to the user.
 class SquareShownEnum(Enum):
@@ -49,7 +50,7 @@ class MinesweeperBoard:
             elif self.square_shown_state == SquareShownEnum.MINE_EXPLODED:
                 return " ! "
             elif self.square_shown_state == SquareShownEnum.USER_PLANTED_FLAG:
-                return " F "
+                return " # "
             else:
                 return " %s " % self.adj_mine_count
 
@@ -70,6 +71,7 @@ class MinesweeperBoard:
         self.square_edges = {}
         self.num_safely_shown_squares = 0
         self.expected_safe_squares = 0
+        self.num_flags_planted = 0
 
     # Sets up the game with given input. Sets up the squares along with all its
     # adjacent edges.
@@ -145,33 +147,56 @@ class MinesweeperBoard:
 
     # Prints line break so user can see between their inputs better.
     def print_line_break(self):
-        print("+++++++++++++++++++++++++++++++++++++++++++++++++++++")
+        print("\n+++++++++++++++++++++++++++++++++++++++++++++++++++++\n")
 
     # Print the board for the user.
     def print_board(self, debug=False):
         self.print_line_break()
 
+        if self.game_result == GameResultEnum.WON:
+            print("!!!!!!!!!!!!!!!")
+            print("!!! YOU WON !!!")
+            print("!!!!!!!!!!!!!!!\n")
+        elif self.game_result == GameResultEnum.DEFEAT:
+            print("----------------")
+            print("--- YOU LOST ---")
+            print("----------------\n")
+
+        print(" + Num Safe Squares Shown: %s" % self.num_safely_shown_squares)
+        print(" + Num Flags Planted: %s \n" % self.num_flags_planted)
+
+        x_break = "    "
+        x_label = "    "
+        for x in range(self.num_xs):
+            x_break += "---"
+            x_label += (" %s " % str(x))
+        print(x_label)
+        print(x_break)
+
         for y in reversed(range(self.num_ys)):
-            y_row_to_print = ("%s| " % y)
+            y_row_to_print = (" %s |" % y)
             for x in range(self.num_xs):
                 square = self.squares[x][y]
                 if debug:
                     y_row_to_print += square.get_print_str_for_debug()
                 else:
                     y_row_to_print += square.get_print_str_for_user()
+            y_row_to_print += ("| %s") % y
             print(y_row_to_print)
 
-        x_break = "   "
-        x_label = "   "
-        for x in range(self.num_xs):
-            x_break += "---"
-            x_label += (" %s " % str(x))
         print(x_break)
         print(x_label)
+        print("")
 
     # Checks if the user move is valid.
     def is_valid_move(self, x_cord, y_cord, action):
         square = self.squares[x_cord][y_cord]
+        if action == UserAction.UNPLANT_FLAG:
+            if square.square_shown_state != SquareShownEnum.USER_PLANTED_FLAG:
+                return (False, "Can't unplant - Square[%s][%s] does not have a flag" % (x_cord, y_cord))
+            else:
+                return (True, "Success")
+
         if square.square_shown_state != SquareShownEnum.BLANK:
             return (False, "Square[%s][%s] already shown" % (x_cord, y_cord))
         return (True, "Success")
@@ -181,6 +206,11 @@ class MinesweeperBoard:
         square = self.squares[x_cord][y_cord]
         if action == UserAction.PLANT_FLAG:
             square.square_shown_state = SquareShownEnum.USER_PLANTED_FLAG
+            self.num_flags_planted += 1
+            return
+        elif action == UserAction.UNPLANT_FLAG:
+            square.square_shown_state = SquareShownEnum.BLANK
+            self.num_flags_planted -= 1
             return
         elif action == UserAction.CLICK:
             if square.has_mine:
@@ -203,10 +233,13 @@ class MinesweeperBoard:
             if (traverse_x_cord, traverse_y_cord) in traversed_set:
                 continue
             traversed_set.add((traverse_x_cord, traverse_y_cord))
-
             square = self.squares[traverse_x_cord][traverse_y_cord]
-            square.square_shown_state = SquareShownEnum.SAFELY_SHOWN
-            self.num_safely_shown_squares += 1
+
+            # Only increment num_safely_shown_squares if it hasn't been
+            # incremented before.
+            if square.square_shown_state != SquareShownEnum.SAFELY_SHOWN:
+                square.square_shown_state = SquareShownEnum.SAFELY_SHOWN
+                self.num_safely_shown_squares += 1
 
             if square.adj_mine_count == 0:
                 for edge_tup in self.square_edges[(traverse_x_cord, traverse_y_cord)]:

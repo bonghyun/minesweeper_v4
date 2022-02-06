@@ -35,15 +35,8 @@ class GameMaster:
 
             self.ms_board.play_move(x_cord, y_cord, action)
 
-        # If the last move resulted in WON / DEFEAT, end the game.
-        if self.ms_board.game_result == board.GameResultEnum.WON:
-            print("You won!")
-            self.ms_board.print_board(True)
-        elif self.ms_board.game_result == board.GameResultEnum.DEFEAT:
-            print("You lost!")
-            self.ms_board.print_board(True)
-        else:
-            raise ValueError("Unexpected game reuslt: %s" % self.ms_board.game_result())
+        # Once the game is done, show the board.
+        self.ms_board.print_board(True)
 
     # Gets input from user and returns tuple of (length, height, num_mines).
     def get_game_type(self):
@@ -51,11 +44,11 @@ class GameMaster:
         while True:
             print("Enter Grid Type - ('Beginner', 'Medium', 'Expert')")
             game_type = input("'Beginner', 'Medium', 'Expert': ")
-            if game_type == 'Beginner':
+            if game_type in ('Beginner', 'B', 'b'):
                 return (9, 9, 10)
-            elif game_type == 'Medium':
+            elif game_type in ('Medium', 'M', 'm'):
                 return (16, 16, 40)
-            elif game_type == 'Expert':
+            elif game_type in ('Expert', 'E', 'e'):
                 return (16, 30, 99)
             else:
                 print("**Unexpected Game Type: %s" % game_type)
@@ -91,13 +84,16 @@ class GameMaster:
                 break
 
         while True:
-            print("Enter C to click (is safe). Enter F to plant flag (there's a mine).")
-            action_input = input("C or F: ")
-            if action_input == "C":
+            print("Enter 'C' to click | 'F' to plant flag | 'U' to unplant a flag.")
+            action_input = input("C or F or U: ")
+            if action_input == "C" or action_input == "c":
                 action = board.UserAction.CLICK
                 break
-            elif action_input == "F":
+            elif action_input == "F" or action_input == "f":
                 action = board.UserAction.PLANT_FLAG
+                break
+            elif action_input == "U" or action_input == "u":
+                action = board.UserAction.UNPLANT_FLAG
                 break
             else:
                 print("%s it not a valid action." % action_input)
