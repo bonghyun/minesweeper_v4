@@ -4,8 +4,8 @@ Minesweeper V4
 
 This is used to play MineSweeper. Should look something like this:
 
-+++++++++++++++++++++++++++++++++++++++++++++++++++++
 
+```
  + Num Safe Squares Shown: 66
  + Num Flags Planted: 7
 
@@ -29,3 +29,4 @@ Enter y coordinate - (0 .. 8)
 0 .. 8: 8
 Enter 'C' to click | 'F' to plant flag | 'U' to unplant a flag.
 C or F or U: c
+```
