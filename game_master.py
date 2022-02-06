@@ -14,18 +14,18 @@ class GameMaster:
 
     def start_game(self):
         # Initialize board with the given input.
-        self.board = board.MinesweeperBoard()
+        self.ms_board = board.MinesweeperBoard()
 
-        while not self.board.is_set_up():
+        while not self.ms_board.is_set_up():
             (num_xs, num_ys, num_mines) = self.get_game_type()
-            self.board.set_up(num_xs, num_ys, num_mines)
+            self.ms_board.set_up(num_xs, num_ys, num_mines)
 
         # While game is still running, get next move from user, then try to play
         # that move.
-        while self.board.game_result() == board.GameResult.STILL_RUNNING:
-            self.board.print_board(debug=True)
+        while self.ms_board.game_result == board.GameResultEnum.STILL_RUNNING:
+            self.ms_board.print_board()
             (x_cord, y_cord, action) = self.get_next_move()
-            (is_valid_move, err_msg) = self.board.is_valid_move(
+            (is_valid_move, err_msg) = self.ms_board.is_valid_move(
                 x_cord, y_cord, action)
 
             if not is_valid_move:
@@ -33,17 +33,17 @@ class GameMaster:
                 print(" *Error Message: %s" % err_msg)
                 continue
 
-            self.board.play_move(x_cord, y_cord, action)
+            self.ms_board.play_move(x_cord, y_cord, action)
 
         # If the last move resulted in WON / DEFEAT, end the game.
-        if self.board.game_result() == board.GameResult.WON:
+        if self.ms_board.game_result == board.GameResultEnum.WON:
             print("You won!")
-            self.board.display_board()
-        elif self.board.game_result() == board.GameResult.DEFEAT:
+            self.ms_board.print_board(True)
+        elif self.ms_board.game_result == board.GameResultEnum.DEFEAT:
             print("You lost!")
-            self.board.display_board()
+            self.ms_board.print_board(True)
         else:
-            raise ValueError("Unexpected game reuslt: %s" % self.board.game_result())
+            raise ValueError("Unexpected game reuslt: %s" % self.ms_board.game_result())
 
     # Gets input from user and returns tuple of (length, height, num_mines).
     def get_game_type(self):
@@ -65,27 +65,27 @@ class GameMaster:
     # num_flags (0 to indicate no mine).
     def get_next_move(self):
         while True:
-            print("Enter x coordinate - (0 .. %s)" % (self.board.num_xs - 1))
-            x_cord = input("0 .. %s: " % (self.board.num_xs - 1))
+            print("Enter x coordinate - (0 .. %s)" % (self.ms_board.num_xs - 1))
+            x_cord = input("0 .. %s: " % (self.ms_board.num_xs - 1))
             try:
                 x_cord = int(x_cord)
             except:
                 print("%s is not a valid int." % x_cord)
                 continue
-            if x_cord < 0 or x_cord >= self.board.num_xs:
+            if x_cord < 0 or x_cord >= self.ms_board.num_xs:
                 print("%s is out of bounds." % x_cord)
             else:
                 break
 
         while True:
-            print("Enter y coordinate - (0 .. %s)" % (self.board.num_ys - 1))
-            y_cord = input("0 .. %s: " % (self.board.num_ys - 1))
+            print("Enter y coordinate - (0 .. %s)" % (self.ms_board.num_ys - 1))
+            y_cord = input("0 .. %s: " % (self.ms_board.num_ys - 1))
             try:
                 y_cord = int(y_cord)
             except:
                 print("%s is not a valid int." % y_cord)
                 continue
-            if y_cord < 0 or y_cord >= self.board.num_ys:
+            if y_cord < 0 or y_cord >= self.ms_board.num_ys:
                 print("%s is out of bounds." % y_cord)
             else:
                 break

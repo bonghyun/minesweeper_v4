@@ -5,15 +5,23 @@ Board class that controlls Minesweeper board.
 from enum import Enum
 import random
 
-class GameResult(Enum):
+# Enums representing game result.
+class GameResultEnum(Enum):
     STILL_RUNNING = 1
     WON = 2
     DEFEAT = 3
 
-
+# Enums representing user's action.
 class UserAction(Enum):
     CLICK = 1
     PLANT_FLAG = 2
+
+# Enums representing square shown to the user.
+class SquareShownEnum(Enum):
+    BLANK = 1
+    MINE_EXPLODED = 2
+    USER_PLANTED_FLAG = 3
+    SAFELY_SHOWN = 4
 
 
 # Minesweeper Board. Represents the entire board, including each of its
@@ -27,33 +35,41 @@ class MinesweeperBoard:
             self.y_cord = y_cord
             self.has_mine = has_mine
             self.adj_mine_count = 0
-            self.shown_to_user = False
-            self.user_planted_flag = False
+            self.square_shown_state = SquareShownEnum.BLANK
+
+        def __str__(self):
+            return "[%s][%s] | has_mine: %s | adj_mine_cnt: %s | square_shown_state: %s" % (self.x_cord, self.y_cord, self.has_mine, self.adj_mine_count, self.square_shown_state)
 
         def increment_adj_mine_count(self):
             self.adj_mine_count += 1
 
         def get_print_str_for_user(self):
-            if self.user_planted_flag:
-                return " F "
-            if self.shown_to_user:
-                return " %s " % self.adj_mine_count
-            else:
+            if self.square_shown_state == SquareShownEnum.BLANK:
                 return "   "
+            elif self.square_shown_state == SquareShownEnum.MINE_EXPLODED:
+                return " ! "
+            elif self.square_shown_state == SquareShownEnum.USER_PLANTED_FLAG:
+                return " F "
+            else:
+                return " %s " % self.adj_mine_count
 
         def get_print_str_for_debug(self):
+            if self.square_shown_state == SquareShownEnum.MINE_EXPLODED:
+                return " ! "
             if self.has_mine:
                 return " X "
-            else:
-                return " %s " % self.adj_mine_count
+            return " %s " % self.adj_mine_count
 
     # Set up class variables.
     def __init__(self):
+        self.game_result = GameResultEnum.STILL_RUNNING
         self.num_xs = None
         self.num_ys = None
         self.num_mines = None
         self.squares = {}
         self.square_edges = {}
+        self.num_safely_shown_squares = 0
+        self.expected_safe_squares = 0
 
     # Sets up the game with given input. Sets up the squares along with all its
     # adjacent edges.
@@ -118,6 +134,9 @@ class MinesweeperBoard:
                     (edge_tup_x, edge_tup_y) = edge_tup
                     self.squares[edge_tup_x][edge_tup_y].increment_adj_mine_count()
 
+        # Set expected_safe_squares
+        self.expected_safe_squares = (self.num_xs * self.num_ys) - self.num_mines
+
     # Returns true if the board has been set up.
     def is_set_up(self):
         return (self.num_xs is not None and
@@ -150,14 +169,48 @@ class MinesweeperBoard:
         print(x_break)
         print(x_label)
 
-    # Return the current game result. Could be STILL_RUNNING, WON, or DEFEAT.
-    def game_result(self):
-        return GameResult.STILL_RUNNING
-
     # Checks if the user move is valid.
     def is_valid_move(self, x_cord, y_cord, action):
-        return (False, "Error")
+        square = self.squares[x_cord][y_cord]
+        if square.square_shown_state != SquareShownEnum.BLANK:
+            return (False, "Square[%s][%s] already shown" % (x_cord, y_cord))
+        return (True, "Success")
 
     # Plays the given user's input.
     def play_move(self, x_cord, y_cord, action):
-        pass
+        square = self.squares[x_cord][y_cord]
+        if action == UserAction.PLANT_FLAG:
+            square.square_shown_state = SquareShownEnum.USER_PLANTED_FLAG
+            return
+        elif action == UserAction.CLICK:
+            if square.has_mine:
+                print("!!! Clicked on Mine Square[%s][%s] !!!" % (x_cord, y_cord))
+                square.square_shown_state = SquareShownEnum.MINE_EXPLODED
+                self.game_result = GameResultEnum.DEFEAT
+                return
+        else:
+            raise ValueError("Invalid action: %s" % action)
+
+        # User has clicked on a non-mine square. Traverse edges to see if other
+        # squares should be shown.
+        traverse_list = [(x_cord, y_cord)]
+        traversed_set = set()
+        while traverse_list:
+            # For a given square, put it to traversed_list and set shown_to_user
+            # as True. If the given square's adj_mine_count is 0, append the
+            # edges.
+            (traverse_x_cord, traverse_y_cord) = traverse_list.pop()
+            if (traverse_x_cord, traverse_y_cord) in traversed_set:
+                continue
+            traversed_set.add((traverse_x_cord, traverse_y_cord))
+
+            square = self.squares[traverse_x_cord][traverse_y_cord]
+            square.square_shown_state = SquareShownEnum.SAFELY_SHOWN
+            self.num_safely_shown_squares += 1
+
+            if square.adj_mine_count == 0:
+                for edge_tup in self.square_edges[(traverse_x_cord, traverse_y_cord)]:
+                    traverse_list.append(edge_tup)
+
+        if self.num_safely_shown_squares == self.expected_safe_squares:
+            self.game_result = GameResultEnum.WON
