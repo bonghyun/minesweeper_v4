@@ -149,6 +149,19 @@ class MinesweeperBoard:
     def print_line_break(self):
         print("\n+++++++++++++++++++++++++++++++++++++++++++++++++++++\n")
 
+    # Get number of indexes for printing
+    def get_num_idx(self, num_xs, num_ys):
+        if num_xs <= 10 and num_ys <= 10:
+            return 1
+        return 2
+
+    def get_num_w_idx(self, num_idx, num):
+        if num_idx == 1:
+            return " " + str(num) + " "
+        if num <= 9:
+            return " 0" + str(num) + " "
+        return " " + str(num) + " "
+
     # Print the board for the user.
     def print_board(self, debug=False):
         self.print_line_break()
@@ -165,23 +178,29 @@ class MinesweeperBoard:
         print(" + Num Safe Squares Shown: %s" % self.num_safely_shown_squares)
         print(" + Num Flags Planted: %s \n" % self.num_flags_planted)
 
+        num_idx = self.get_num_idx(self.num_xs, self.num_ys)
+
         x_break = "    "
         x_label = "    "
         for x in range(self.num_xs):
-            x_break += "---"
-            x_label += (" %s " % str(x))
+            x_break += "---" if num_idx == 1 else "----"
+            x_label += self.get_num_w_idx(num_idx, x)
+
         print(x_label)
         print(x_break)
 
         for y in reversed(range(self.num_ys)):
-            y_row_to_print = (" %s |" % y)
+            y_row_to_print = self.get_num_w_idx(num_idx, y) + "|"
             for x in range(self.num_xs):
                 square = self.squares[x][y]
                 if debug:
                     y_row_to_print += square.get_print_str_for_debug()
                 else:
                     y_row_to_print += square.get_print_str_for_user()
-            y_row_to_print += ("| %s") % y
+
+                if num_idx == 2:
+                    y_row_to_print += " "
+            y_row_to_print += "|" + self.get_num_w_idx(num_idx, y)
             print(y_row_to_print)
 
         print(x_break)
